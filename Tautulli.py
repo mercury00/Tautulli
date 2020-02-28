@@ -1,5 +1,3 @@
-#!/usr/local/tautulli-venv/bin/python3
-
 #!/bin/sh
 #''''which python    >/dev/null 2>&1 && exec python    "$0" "$@" # '''
 #''''which python3   >/dev/null 2>&1 && exec python3   "$0" "$@" # '''
