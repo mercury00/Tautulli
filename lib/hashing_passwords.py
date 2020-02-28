@@ -1,32 +1,29 @@
 # coding: utf8
 """
-
     Securely hash and check passwords using PBKDF2.
-
     Use random salts to protect againt rainbow tables, many iterations against
     brute-force, and constant-time comparaison againt timing attacks.
-
     Keep parameters to the algorithm together with the hash so that we can
     change the parameters and keep older hashes working.
-
     See more details at http://exyr.org/2011/hashing-passwords/
-
     Author: Simon Sapin
     License: BSD
 
+    ------------
+    This script is an interface for pbkdf2.py
 """
 
 import hashlib
 from os import urandom
 from base64 import b64encode, b64decode
-from itertools import izip
+
 
 # From https://github.com/mitsuhiko/python-pbkdf2
-from pbkdf2 import pbkdf2_bin
+from pbkdf2 import PBKDF2 as pbkdf2_bin
 
 
 # Parameters to PBKDF2. Only affect new passwords.
-SALT_LENGTH = 16
+SALT_LENGTH = 12
 KEY_LENGTH = 24
 HASH_FUNCTION = 'sha256'  # Must be in hashlib.
 # Linear to the hashing time. Adjust to be high but take a reasonable
@@ -37,7 +34,7 @@ COST_FACTOR = 10000
 
 def make_hash(password):
     """Generate a random salt and return a new hash for the password."""
-    if isinstance(password, unicode):
+    if isinstance(password, str):
         password = password.encode('utf-8')
     salt = b64encode(urandom(SALT_LENGTH))
     return 'PBKDF2${}${}${}${}'.format(
@@ -50,7 +47,7 @@ def make_hash(password):
 
 def check_hash(password, hash_):
     """Check a password against an existing hash."""
-    if isinstance(password, unicode):
+    if isinstance(password, str):
         password = password.encode('utf-8')
     algorithm, hash_function, cost_factor, salt, hash_a = hash_.split('$')
     assert algorithm == 'PBKDF2'
@@ -61,6 +58,6 @@ def check_hash(password, hash_):
     # Same as "return hash_a == hash_b" but takes a constant time.
     # See http://carlos.bueno.org/2011/10/timing.html
     diff = 0
-    for char_a, char_b in izip(hash_a, hash_b):
+    for char_a, char_b in zip(hash_a, hash_b):
         diff |= ord(char_a) ^ ord(char_b)
     return diff == 0

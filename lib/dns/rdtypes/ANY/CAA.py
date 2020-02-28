@@ -1,3 +1,5 @@
+# Copyright (C) Dnspython Contributors, see LICENSE for text of ISC license
+
 # Copyright (C) 2003-2007, 2009-2011 Nominum, Inc.
 #
 # Permission to use, copy, modify, and distribute this software and its
@@ -71,4 +73,3 @@ class CAA(dns.rdata.Rdata):
         tag = wire[current: current + l]
         value = wire[current + l:current + rdlen - 2]
         return cls(rdclass, rdtype, flags, tag, value)
-

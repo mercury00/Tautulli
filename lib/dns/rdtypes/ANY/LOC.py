@@ -1,3 +1,5 @@
+# Copyright (C) Dnspython Contributors, see LICENSE for text of ISC license
+
 # Copyright (C) 2003-2007, 2009-2011 Nominum, Inc.
 #
 # Permission to use, copy, modify, and distribute this software and its
@@ -13,11 +15,13 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 # OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from __future__ import division
+
 import struct
 
 import dns.exception
 import dns.rdata
-from dns._compat import long, xrange
+from dns._compat import long, xrange, round_py2_compat
 
 
 _pows = tuple(long(10**i) for i in range(0, 11))
@@ -47,7 +51,7 @@ def _float_to_tuple(what):
         what *= -1
     else:
         sign = 1
-    what = long(round(what * 3600000))
+    what = round_py2_compat(what * 3600000)
     degrees = int(what // 3600000)
     what -= degrees * 3600000
     minutes = int(what // 60000)
@@ -136,16 +140,12 @@ class LOC(dns.rdata.Rdata):
     def to_text(self, origin=None, relativize=True, **kw):
         if self.latitude[4] > 0:
             lat_hemisphere = 'N'
-            lat_degrees = self.latitude[0]
         else:
             lat_hemisphere = 'S'
-            lat_degrees = -1 * self.latitude[0]
         if self.longitude[4] > 0:
             long_hemisphere = 'E'
-            long_degrees = self.longitude[0]
         else:
             long_hemisphere = 'W'
-            long_degrees = -1 * self.longitude[0]
         text = "%d %d %d.%03d %s %d %d %d.%03d %s %0.2fm" % (
             self.latitude[0], self.latitude[1],
             self.latitude[2], self.latitude[3], lat_hemisphere,
@@ -158,7 +158,7 @@ class LOC(dns.rdata.Rdata):
         if self.size != _default_size or \
             self.horizontal_precision != _default_hprec or \
                 self.vertical_precision != _default_vprec:
-            text += " %0.2fm %0.2fm %0.2fm" % (
+            text += " {:0.2f}m {:0.2f}m {:0.2f}m".format(
                 self.size / 100.0, self.horizontal_precision / 100.0,
                 self.vertical_precision / 100.0
             )

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2013 Vinay Sajip. All rights reserved.
+# Copyright (C) 2010-2017 Vinay Sajip. All rights reserved.
 #
 import ctypes
 import logging
@@ -18,7 +18,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
     :param strm: The stream to colorize - typically ``sys.stdout``
                  or ``sys.stderr``.
     """
-    
+
     # color names to indices
     color_map = {
         'black': 0,
@@ -64,7 +64,8 @@ class ColorizingStreamHandler(logging.StreamHandler):
             message = self.format(record)
             stream = self.stream
             if unicode and isinstance(message, unicode):
-                enc = getattr(stream, 'encoding', 'utf-8')
+                # Sometimes there's an encoding attribute, but it's None.
+                enc = getattr(stream, 'encoding', None) or 'utf-8'
                 message = message.encode(enc, 'replace')
             if not self.is_tty:
                 stream.write(message)
@@ -191,4 +192,3 @@ class ColorizingStreamHandler(logging.StreamHandler):
             parts[0] = self.colorize(parts[0], record)
             message = '\n'.join(parts)
         return message
-

@@ -10,9 +10,7 @@ except ImportError:
 
 
 class FileBuffer(object):
-
     """A slice-able file reader"""
-
     def __init__(self, database):
         self._handle = open(database, 'rb')
         self._size = os.fstat(self._handle.fileno()).st_size
@@ -22,10 +20,9 @@ class FileBuffer(object):
     def __getitem__(self, key):
         if isinstance(key, slice):
             return self._read(key.stop - key.start, key.start)
-        elif isinstance(key, int):
-            return self._read(1, key)
-        else:
-            raise TypeError("Invalid argument type.")
+        if isinstance(key, int):
+            return self._read(1, key)[0]
+        raise TypeError("Invalid argument type.")
 
     def rfind(self, needle, start):
         """Reverse find needle from start"""

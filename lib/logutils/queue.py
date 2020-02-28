@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2010-2013 Vinay Sajip. See LICENSE.txt for details.
+# Copyright (C) 2010-2017 Vinay Sajip. See LICENSE.txt for details.
 #
 """
 This module contains classes which help you work with queues. A typical
@@ -32,7 +32,7 @@ class QueueHandler(logging.Handler):
     with a multiprocessing Queue to centralise logging to file in one process
     (in a multi-process application), so as to avoid file write contention
     between processes.
-    
+
     :param queue: The queue to send `LogRecords` to.
     """
 
@@ -50,7 +50,7 @@ class QueueHandler(logging.Handler):
         The base implementation uses :meth:`~queue.Queue.put_nowait`. You may
         want to override this method if you want to use blocking, timeouts or
         custom queue implementations.
-        
+
         :param record: The record to enqueue.
         """
         self.queue.put_nowait(record)
@@ -67,7 +67,7 @@ class QueueHandler(logging.Handler):
         You might want to override this method if you want to convert
         the record to a dict or JSON string, or send a modified copy
         of the record while leaving the original intact.
-        
+
         :param record: The record to prepare.
         """
         # The format operation gets traceback text into record.exc_text
@@ -87,7 +87,7 @@ class QueueHandler(logging.Handler):
         Emit a record.
 
         Writes the LogRecord to the queue, preparing it for pickling first.
-        
+
         :param record: The record to emit.
         """
         try:
@@ -102,22 +102,22 @@ class QueueListener(object):
     This class implements an internal threaded listener which watches for
     LogRecords being added to a queue, removes them and passes them to a
     list of handlers for processing.
-            
+
     :param record: The queue to listen to.
     :param handlers: The handlers to invoke on everything received from
                      the queue.
     """
     _sentinel = None
 
-    def __init__(self, queue, *handlers):
+    def __init__(self, queue, *handlers, **kwargs):
         """
         Initialise an instance with the specified queue and
         handlers.
         """
         self.queue = queue
         self.handlers = handlers
-        self._stop = threading.Event()
         self._thread = None
+        self.respect_handler_level = kwargs.get('respect_handler_level', False)
 
     def dequeue(self, block):
         """
@@ -126,7 +126,7 @@ class QueueListener(object):
         The base implementation uses :meth:`~queue.Queue.get`. You may want to
         override this method if you want to use timeouts or work with custom
         queue implementations.
-        
+
         :param block: Whether to block if the queue is empty. If `False` and
                       the queue is empty, an :class:`~queue.Empty` exception
                       will be thrown.
@@ -151,7 +151,7 @@ class QueueListener(object):
         This method just returns the passed-in record. You may want to
         override this method if you need to do any custom marshalling or
         manipulation of the record before passing it to the handlers.
-        
+
         :param record: The record to prepare.
         """
         return record
@@ -167,7 +167,12 @@ class QueueListener(object):
         """
         record = self.prepare(record)
         for handler in self.handlers:
-            handler.handle(record)
+            if not self.respect_handler_level:
+                process = True
+            else:
+                process = record.levelno >= handler.level
+            if process:
+                handler.handle(record)
 
     def _monitor(self):
         """
@@ -179,20 +184,9 @@ class QueueListener(object):
         """
         q = self.queue
         has_task_done = hasattr(q, 'task_done')
-        while not self._stop.isSet():
-            try:
-                record = self.dequeue(True)
-                if record is self._sentinel:
-                    break
-                self.handle(record)
-                if has_task_done:
-                    q.task_done()
-            except queue.Empty:
-                pass
-        # There might still be records in the queue.
         while True:
             try:
-                record = self.dequeue(False)
+                record = self.dequeue(True)
                 if record is self._sentinel:
                     break
                 self.handle(record)
@@ -218,8 +212,6 @@ class QueueListener(object):
         Note that if you don't call this before your application exits, there
         may be some records still left on the queue, which won't be processed.
         """
-        self._stop.set()
         self.enqueue_sentinel()
         self._thread.join()
         self._thread = None
-

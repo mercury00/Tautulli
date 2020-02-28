@@ -11,9 +11,11 @@ http://dev.maxmind.com/geoip/geoip2/web-services for more details.
 
 """
 # pylint: disable=too-many-instance-attributes,too-few-public-methods
+import ipaddress
 from abc import ABCMeta
 
 import geoip2.records
+from geoip2.compat import compat_ip_network
 from geoip2.mixins import SimpleEquality
 
 
@@ -64,7 +66,6 @@ class Country(SimpleEquality):
       :type: :py:class:`geoip2.records.Traits`
 
     """
-
     def __init__(self, raw_response, locales=None):
         if locales is None:
             locales = ['en']
@@ -160,7 +161,6 @@ class City(Country):
       :type: :py:class:`geoip2.records.Traits`
 
     """
-
     def __init__(self, raw_response, locales=None):
         super(City, self).__init__(raw_response, locales)
         self.city = \
@@ -307,12 +307,36 @@ class SimpleModel(SimpleEquality):
 
     __metaclass__ = ABCMeta
 
+    def __init__(self, raw):
+        self.raw = raw
+        self._network = None
+        self._prefix_len = raw.get('prefix_len')
+        self.ip_address = raw.get('ip_address')
+
     def __repr__(self):
         # pylint: disable=no-member
         return '{module}.{class_name}({data})'.format(
             module=self.__module__,
             class_name=self.__class__.__name__,
             data=str(self.raw))
+
+    @property
+    def network(self):
+        """The network for the record"""
+        # This code is duplicated for performance reasons
+        # pylint: disable=duplicate-code
+        network = self._network
+        if isinstance(network, (ipaddress.IPv4Network, ipaddress.IPv6Network)):
+            return network
+
+        ip_address = self.ip_address
+        prefix_len = self._prefix_len
+        if ip_address is None or prefix_len is None:
+            return None
+        network = compat_ip_network("{}/{}".format(ip_address, prefix_len),
+                                    False)
+        self._network = network
+        return network
 
 
 class AnonymousIP(SimpleModel):
@@ -328,13 +352,19 @@ class AnonymousIP(SimpleModel):
 
     .. attribute:: is_anonymous_vpn
 
-      This is true if the IP address belongs to an anonymous VPN system.
+      This is true if the IP address is registered to an anonymous VPN
+      provider.
+
+      If a VPN provider does not register subnets under names associated with
+      them, we will likely only flag their IP ranges using the
+      ``is_hosting_provider`` attribute.
 
       :type: bool
 
     .. attribute:: is_hosting_provider
 
-      This is true if the IP address belongs to a hosting provider.
+      This is true if the IP address belongs to a hosting or VPN provider
+      (see description of ``is_anonymous_vpn`` attribute).
 
       :type: bool
 
@@ -355,17 +385,63 @@ class AnonymousIP(SimpleModel):
       The IP address used in the lookup.
 
       :type: unicode
-    """
 
+    .. attribute:: network
+
+      The network associated with the record. In particular, this is the
+      largest network where all of the fields besides ip_address have the same
+      value.
+
+      :type: ipaddress.IPv4Network or ipaddress.IPv6Network
+    """
     def __init__(self, raw):
+        super(AnonymousIP, self).__init__(raw)
         self.is_anonymous = raw.get('is_anonymous', False)
         self.is_anonymous_vpn = raw.get('is_anonymous_vpn', False)
         self.is_hosting_provider = raw.get('is_hosting_provider', False)
         self.is_public_proxy = raw.get('is_public_proxy', False)
         self.is_tor_exit_node = raw.get('is_tor_exit_node', False)
 
-        self.ip_address = raw.get('ip_address')
-        self.raw = raw
+
+class ASN(SimpleModel):
+    """Model class for the GeoLite2 ASN.
+
+    This class provides the following attribute:
+
+    .. attribute:: autonomous_system_number
+
+      The autonomous system number associated with the IP address.
+
+      :type: int
+
+    .. attribute:: autonomous_system_organization
+
+      The organization associated with the registered autonomous system number
+      for the IP address.
+
+      :type: unicode
+
+    .. attribute:: ip_address
+
+      The IP address used in the lookup.
+
+      :type: unicode
+
+    .. attribute:: network
+
+      The network associated with the record. In particular, this is the
+      largest network where all of the fields besides ip_address have the same
+      value.
+
+      :type: ipaddress.IPv4Network or ipaddress.IPv6Network
+    """
+
+    # pylint:disable=too-many-arguments
+    def __init__(self, raw):
+        super(ASN, self).__init__(raw)
+        self.autonomous_system_number = raw.get('autonomous_system_number')
+        self.autonomous_system_organization = raw.get(
+            'autonomous_system_organization')
 
 
 class ConnectionType(SimpleModel):
@@ -391,12 +467,18 @@ class ConnectionType(SimpleModel):
       The IP address used in the lookup.
 
       :type: unicode
-    """
 
+    .. attribute:: network
+
+      The network associated with the record. In particular, this is the
+      largest network where all of the fields besides ip_address have the same
+      value.
+
+      :type: ipaddress.IPv4Network or ipaddress.IPv6Network
+    """
     def __init__(self, raw):
+        super(ConnectionType, self).__init__(raw)
         self.connection_type = raw.get('connection_type')
-        self.ip_address = raw.get('ip_address')
-        self.raw = raw
 
 
 class Domain(SimpleModel):
@@ -416,15 +498,21 @@ class Domain(SimpleModel):
 
       :type: unicode
 
+    .. attribute:: network
+
+      The network associated with the record. In particular, this is the
+      largest network where all of the fields besides ip_address have the same
+      value.
+
+      :type: ipaddress.IPv4Network or ipaddress.IPv6Network
+
     """
-
     def __init__(self, raw):
+        super(Domain, self).__init__(raw)
         self.domain = raw.get('domain')
-        self.ip_address = raw.get('ip_address')
-        self.raw = raw
 
 
-class ISP(SimpleModel):
+class ISP(ASN):
     """Model class for the GeoIP2 ISP.
 
     This class provides the following attribute:
@@ -459,14 +547,18 @@ class ISP(SimpleModel):
       The IP address used in the lookup.
 
       :type: unicode
+
+    .. attribute:: network
+
+      The network associated with the record. In particular, this is the
+      largest network where all of the fields besides ip_address have the same
+      value.
+
+      :type: ipaddress.IPv4Network or ipaddress.IPv6Network
     """
 
     # pylint:disable=too-many-arguments
     def __init__(self, raw):
-        self.autonomous_system_number = raw.get('autonomous_system_number')
-        self.autonomous_system_organization = raw.get(
-            'autonomous_system_organization')
+        super(ISP, self).__init__(raw)
         self.isp = raw.get('isp')
         self.organization = raw.get('organization')
-        self.ip_address = raw.get('ip_address')
-        self.raw = raw

@@ -1,3 +1,5 @@
+# Copyright (C) Dnspython Contributors, see LICENSE for text of ISC license
+
 # Copyright (C) 2010, 2011 Nominum, Inc.
 #
 # Permission to use, copy, modify, and distribute this software and its
@@ -81,4 +83,3 @@ class DSBase(dns.rdata.Rdata):
         rdlen -= 4
         digest = wire[current: current + rdlen].unwrap()
         return cls(rdclass, rdtype, header[0], header[1], header[2], digest)
-

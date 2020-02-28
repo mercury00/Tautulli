@@ -74,3 +74,7 @@ _ReSharper*/
 /logs
 .project
 .pydevproject
+
+##Ignore pip install files for python
+*.egg-info
+*.dist-info

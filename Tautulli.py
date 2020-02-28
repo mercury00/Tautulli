@@ -1,8 +1,10 @@
+#!/usr/local/tautulli-venv/bin/python3
+
 #!/bin/sh
-''''which python    >/dev/null 2>&1 && exec python    "$0" "$@" # '''
-''''which python2   >/dev/null 2>&1 && exec python2   "$0" "$@" # '''
-''''which python2.7 >/dev/null 2>&1 && exec python2.7 "$0" "$@" # '''
-''''exec echo "Error: Python not found!" # '''
+#''''which python    >/dev/null 2>&1 && exec python    "$0" "$@" # '''
+#''''which python3   >/dev/null 2>&1 && exec python3   "$0" "$@" # '''
+#''''which python3.8 >/dev/null 2>&1 && exec python3.8 "$0" "$@" # '''
+#''''exec echo "Error: Python3 not found!" # '''
 
 # -*- coding: utf-8 -*-
 
@@ -122,7 +124,7 @@ def main():
 
     if args.dev:
         plexpy.DEV = True
-        logger.debug(u"Tautulli is running in the dev environment.")
+        logger.debug("Tautulli is running in the dev environment.")
 
     if args.daemon:
         if sys.platform == 'win32':

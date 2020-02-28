@@ -27,7 +27,7 @@ import threading
 import traceback
 
 import plexpy
-import helpers
+from . import helpers
 from plexpy.config import _BLACKLIST_KEYS, _WHITELIST_KEYS
 
 # These settings are for file logging only
@@ -54,8 +54,8 @@ def blacklist_config(config):
     blacklist = set()
     blacklist_keys = ['HOOK', 'APIKEY', 'KEY', 'PASSWORD', 'TOKEN']
 
-    for key, value in config.iteritems():
-        if isinstance(value, basestring) and len(value.strip()) > 5 and \
+    for key, value in config.items():
+        if isinstance(value, str) and len(value.strip()) > 5 and \
             key.upper() not in _WHITELIST_KEYS and (key.upper() in blacklist_keys or
                                                     any(bk in key.upper() for bk in _BLACKLIST_KEYS)):
             blacklist.add(value.strip())
@@ -91,7 +91,7 @@ class BlacklistFilter(logging.Filter):
                 if item in record.msg:
                     record.msg = record.msg.replace(item, 8 * '*' + item[-2:])
                 if any(item in str(arg) for arg in record.args):
-                    record.args = tuple(arg.replace(item, 8 * '*' + item[-2:]) if isinstance(arg, basestring) else arg
+                    record.args = tuple(arg.replace(item, 8 * '*' + item[-2:]) if isinstance(arg, str) else arg
                                         for arg in record.args)
             except:
                 pass
@@ -118,7 +118,7 @@ class RegexFilter(logging.Filter):
 
             args = []
             for arg in record.args:
-                matches = self.regex.findall(arg) if isinstance(arg, basestring) else []
+                matches = self.regex.findall(arg) if isinstance(arg, str) else []
                 for match in matches:
                     arg = self.replace(arg, match)
                 args.append(arg)

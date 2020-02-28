@@ -18,12 +18,12 @@ import json
 import time
 
 import plexpy
-import database
-import helpers
-import libraries
-import logger
-import pmsconnect
-import users
+from . import database
+from . import helpers
+from . import libraries
+from . import logger
+from . import pmsconnect
+from . import users
 
 
 class ActivityProcessor(object):
@@ -190,8 +190,8 @@ class ActivityProcessor(object):
             if str(session['rating_key']).isdigit() and session['media_type'] in ('movie', 'episode', 'track'):
                 logging_enabled = True
             else:
-                logger.debug(u"Tautulli ActivityProcessor :: Session %s ratingKey %s not logged. "
-                             u"Does not meet logging criteria. Media type is '%s'" %
+                logger.debug("Tautulli ActivityProcessor :: Session %s ratingKey %s not logged. "
+                             "Does not meet logging criteria. Media type is '%s'" %
                              (session['session_key'], session['rating_key'], session['media_type']))
                 return session['id']
 
@@ -204,36 +204,36 @@ class ActivityProcessor(object):
                 if (session['media_type'] == 'movie' or session['media_type'] == 'episode') and \
                         (real_play_time < int(plexpy.CONFIG.LOGGING_IGNORE_INTERVAL)):
                     logging_enabled = False
-                    logger.debug(u"Tautulli ActivityProcessor :: Play duration for session %s ratingKey %s is %s secs "
-                                 u"which is less than %s seconds, so we're not logging it." %
+                    logger.debug("Tautulli ActivityProcessor :: Play duration for session %s ratingKey %s is %s secs "
+                                 "which is less than %s seconds, so we're not logging it." %
                                  (session['session_key'], session['rating_key'], str(real_play_time),
                                   plexpy.CONFIG.LOGGING_IGNORE_INTERVAL))
             if not is_import and session['media_type'] == 'track':
                 if real_play_time < 15 and session['duration'] >= 30:
                     logging_enabled = False
-                    logger.debug(u"Tautulli ActivityProcessor :: Play duration for session %s ratingKey %s is %s secs, "
-                                 u"looks like it was skipped so we're not logging it" %
+                    logger.debug("Tautulli ActivityProcessor :: Play duration for session %s ratingKey %s is %s secs, "
+                                 "looks like it was skipped so we're not logging it" %
                                  (session['session_key'], session['rating_key'], str(real_play_time)))
             elif is_import and import_ignore_interval:
                 if (session['media_type'] == 'movie' or session['media_type'] == 'episode') and \
                         (real_play_time < int(import_ignore_interval)):
                     logging_enabled = False
-                    logger.debug(u"Tautulli ActivityProcessor :: Play duration for ratingKey %s is %s secs which is less than %s "
-                                 u"seconds, so we're not logging it." %
+                    logger.debug("Tautulli ActivityProcessor :: Play duration for ratingKey %s is %s secs which is less than %s "
+                                 "seconds, so we're not logging it." %
                                  (session['rating_key'], str(real_play_time), import_ignore_interval))
 
             if not is_import and not user_details['keep_history']:
                 logging_enabled = False
-                logger.debug(u"Tautulli ActivityProcessor :: History logging for user '%s' is disabled." % user_details['username'])
+                logger.debug("Tautulli ActivityProcessor :: History logging for user '%s' is disabled." % user_details['username'])
             elif not is_import and not library_details['keep_history']:
                 logging_enabled = False
-                logger.debug(u"Tautulli ActivityProcessor :: History logging for library '%s' is disabled." % library_details['section_name'])
+                logger.debug("Tautulli ActivityProcessor :: History logging for library '%s' is disabled." % library_details['section_name'])
 
             if logging_enabled:
 
                 # Fetch metadata first so we can return false if it fails
                 if not is_import:
-                    logger.debug(u"Tautulli ActivityProcessor :: Fetching metadata for item ratingKey %s" % session['rating_key'])
+                    logger.debug("Tautulli ActivityProcessor :: Fetching metadata for item ratingKey %s" % session['rating_key'])
                     pms_connect = pmsconnect.PmsConnect()
                     metadata = pms_connect.get_metadata_details(rating_key=str(session['rating_key']))
                     if not metadata:
@@ -502,7 +502,7 @@ class ActivityProcessor(object):
             if state:
                 values['state'] = state
 
-            for k, v in kwargs.iteritems():
+            for k, v in kwargs.items():
                 values[k] = v
 
             keys = {'session_key': session_key}

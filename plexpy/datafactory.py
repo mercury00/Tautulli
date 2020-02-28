@@ -17,13 +17,13 @@ import json
 from itertools import groupby
 
 import plexpy
-import common
-import database
-import datatables
-import helpers
-import logger
-import pmsconnect
-import session
+from . import common
+from . import database
+from . import datatables
+from . import helpers
+from . import logger
+from . import pmsconnect
+from . import session
 
 
 class DataFactory(object):
@@ -176,7 +176,7 @@ class DataFactory(object):
                                                       ['session_history.id', 'session_history_media_info.id']],
                                           kwargs=kwargs)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_history: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_history: %s." % e)
             return {'recordsFiltered': 0,
                     'recordsTotal': 0,
                     'draw': 0,
@@ -302,7 +302,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_movies: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_movies: %s." % e)
                     return None
 
                 for item in result:
@@ -353,7 +353,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_movies: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_movies: %s." % e)
                     return None
 
                 for item in result:
@@ -400,7 +400,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_tv: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_tv: %s." % e)
                     return None
 
                 for item in result:
@@ -450,7 +450,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_tv: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_tv: %s." % e)
                     return None
 
                 for item in result:
@@ -498,7 +498,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_music: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_music: %s." % e)
                     return None
 
                 for item in result:
@@ -549,7 +549,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_music: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: popular_music: %s." % e)
                     return None
 
                 for item in result:
@@ -597,7 +597,7 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_users: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_users: %s." % e)
                     return None
 
                 for item in result:
@@ -649,13 +649,13 @@ class DataFactory(object):
                             'LIMIT %s ' % (time_range, group_by, sort_type, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_platforms: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: top_platforms: %s." % e)
                     return None
 
                 for item in result:
                     # Rename Mystery platform names
                     platform = common.PLATFORM_NAME_OVERRIDES.get(item['platform'], item['platform'])
-                    platform_name = next((v for k, v in common.PLATFORM_NAMES.iteritems() if k in platform.lower()), 'default')
+                    platform_name = next((v for k, v in common.PLATFORM_NAMES.items() if k in platform.lower()), 'default')
 
                     row = {'total_plays': item['total_plays'],
                            'total_duration': item['total_duration'],
@@ -706,7 +706,7 @@ class DataFactory(object):
                             'LIMIT %s' % (time_range, group_by, movie_watched_percent, tv_watched_percent, stats_count)
                     result = monitor_db.select(query)
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: last_watched: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: last_watched: %s." % e)
                     return None
 
                 for item in result:
@@ -812,7 +812,7 @@ class DataFactory(object):
                     if result:
                         most_concurrent.append(calc_most_concurrent(title, result))
                 except Exception as e:
-                    logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_home_stats: most_concurrent: %s." % e)
+                    logger.warn("Tautulli DataFactory :: Unable to execute database query for get_home_stats: most_concurrent: %s." % e)
                     return None
 
                 home_stats.append({'stat_id': stat,
@@ -840,7 +840,7 @@ class DataFactory(object):
                     'ORDER BY section_type, count DESC, parent_count DESC, child_count DESC ' % ','.join(library_cards)
             result = monitor_db.select(query)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_library_stats: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_library_stats: %s." % e)
             return None
 
         for item in result:
@@ -989,7 +989,7 @@ class DataFactory(object):
                              'pre_tautulli': pre_tautulli
                              }
 
-        stream_output = {k: v or '' for k, v in stream_output.iteritems()}
+        stream_output = {k: v or '' for k, v in stream_output.items()}
         return stream_output
 
     def get_metadata_details(self, rating_key):
@@ -1107,7 +1107,7 @@ class DataFactory(object):
                     '%s ' % where
             result = monitor_db.select(query)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_total_duration: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_total_duration: %s." % e)
             return None
 
         total_duration = 0
@@ -1130,7 +1130,7 @@ class DataFactory(object):
                 query = 'SELECT ip_address FROM sessions WHERE session_key = %d %s' % (int(session_key), user_cond)
                 result = monitor_db.select(query)
             except Exception as e:
-                logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_session_ip: %s." % e)
+                logger.warn("Tautulli DataFactory :: Unable to execute database query for get_session_ip: %s." % e)
                 return ip_address
         else:
             return ip_address
@@ -1191,14 +1191,14 @@ class DataFactory(object):
                     'JOIN image_hash_lookup ON cloudinary_lookup.img_hash = image_hash_lookup.img_hash ' \
                     '%s %s' % (where, order_by)
         else:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_img_info: "
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_img_info: "
                         "service not provided.")
             return img_info
 
         try:
             img_info = monitor_db.select(query, args=args)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_img_info: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_img_info: %s." % e)
 
         return img_info
 
@@ -1217,7 +1217,7 @@ class DataFactory(object):
             values = {'cloudinary_title': img_title,
                       'cloudinary_url': img_url}
         else:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for set_img_info: "
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for set_img_info: "
                         "service not provided.")
             return
 
@@ -1230,7 +1230,7 @@ class DataFactory(object):
             service = helpers.get_img_service()
 
         if not rating_key and not delete_all:
-            logger.error(u"Tautulli DataFactory :: Unable to delete hosted images: rating_key not provided.")
+            logger.error("Tautulli DataFactory :: Unable to delete hosted images: rating_key not provided.")
             return False
 
         where = ''
@@ -1253,7 +1253,7 @@ class DataFactory(object):
                                               img_title=imgur_info['imgur_title'],
                                               fallback=imgur_info['fallback'])
 
-            logger.info(u"Tautulli DataFactory :: Deleting Imgur info%s from the database."
+            logger.info("Tautulli DataFactory :: Deleting Imgur info%s from the database."
                         % log_msg)
             result = monitor_db.action('DELETE FROM imgur_lookup WHERE img_hash '
                                        'IN (SELECT img_hash FROM image_hash_lookup %s)' % where,
@@ -1272,14 +1272,14 @@ class DataFactory(object):
                 for cloudinary_info in results:
                     helpers.delete_from_cloudinary(rating_key=cloudinary_info['rating_key'])
 
-            logger.info(u"Tautulli DataFactory :: Deleting Cloudinary info%s from the database."
+            logger.info("Tautulli DataFactory :: Deleting Cloudinary info%s from the database."
                         % log_msg)
             result = monitor_db.action('DELETE FROM cloudinary_lookup WHERE img_hash '
                                        'IN (SELECT img_hash FROM image_hash_lookup %s)' % where,
                                        args)
 
         else:
-            logger.error(u"Tautulli DataFactory :: Unable to delete hosted images: invalid service '%s' provided."
+            logger.error("Tautulli DataFactory :: Unable to delete hosted images: invalid service '%s' provided."
                          % service)
 
         return service
@@ -1352,7 +1352,7 @@ class DataFactory(object):
                     lookup_info['musicbrainz_id'] = musicbrainz_info['musicbrainz_id']
 
             except Exception as e:
-                logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_lookup_info: %s." % e)
+                logger.warn("Tautulli DataFactory :: Unable to execute database query for get_lookup_info: %s." % e)
 
         return lookup_info
 
@@ -1360,7 +1360,7 @@ class DataFactory(object):
         monitor_db = database.MonitorDatabase()
 
         if rating_key:
-            logger.info(u"Tautulli DataFactory :: Deleting lookup info for '%s' (rating_key %s) from the database."
+            logger.info("Tautulli DataFactory :: Deleting lookup info for '%s' (rating_key %s) from the database."
                         % (title, rating_key))
             result_tvmaze = monitor_db.action('DELETE FROM tvmaze_lookup WHERE rating_key = ?', [rating_key])
             result_themoviedb = monitor_db.action('DELETE FROM themoviedb_lookup WHERE rating_key = ?', [rating_key])
@@ -1455,7 +1455,7 @@ class DataFactory(object):
             grandparent_rating_key = result[0]['grandparent_rating_key']
 
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_rating_keys_list: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_rating_keys_list: %s." % e)
             return {}
 
         query = 'SELECT rating_key, parent_rating_key, grandparent_rating_key, title, parent_title, grandparent_title, ' \
@@ -1503,7 +1503,7 @@ class DataFactory(object):
         monitor_db = database.MonitorDatabase()
 
         if row_id.isdigit():
-            logger.info(u"Tautulli DataFactory :: Deleting row id %s from the session history database." % row_id)
+            logger.info("Tautulli DataFactory :: Deleting row id %s from the session history database." % row_id)
             session_history_del = \
                 monitor_db.action('DELETE FROM session_history WHERE id = ?', [row_id])
             session_history_media_info_del = \
@@ -1522,7 +1522,7 @@ class DataFactory(object):
         # function to map rating keys pairs
         def get_pairs(old, new):
             pairs = {}
-            for k, v in old.iteritems():
+            for k, v in old.items():
                 if k in new:
                     pairs.update({v['rating_key']: new[k]['rating_key']})
                     if 'children' in old[k]:
@@ -1536,8 +1536,8 @@ class DataFactory(object):
             mapping = get_pairs(old_key_list, new_key_list)
 
         if mapping:
-            logger.info(u"Tautulli DataFactory :: Updating metadata in the database.")
-            for old_key, new_key in mapping.iteritems():
+            logger.info("Tautulli DataFactory :: Updating metadata in the database.")
+            for old_key, new_key in mapping.items():
                 metadata = pms_connect.get_metadata_details(new_key)
 
                 if metadata:
@@ -1639,7 +1639,7 @@ class DataFactory(object):
                                           join_evals=[],
                                           kwargs=kwargs)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_notification_log: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_notification_log: %s." % e)
             return {'recordsFiltered': 0,
                     'recordsTotal': 0,
                     'draw': 0,
@@ -1684,12 +1684,12 @@ class DataFactory(object):
         monitor_db = database.MonitorDatabase()
 
         try:
-            logger.info(u"Tautulli DataFactory :: Clearing notification logs from database.")
+            logger.info("Tautulli DataFactory :: Clearing notification logs from database.")
             monitor_db.action('DELETE FROM notify_log')
             monitor_db.action('VACUUM')
             return True
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for delete_notification_log: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for delete_notification_log: %s." % e)
             return False
 
     def get_newsletter_log(self, kwargs=None):
@@ -1718,7 +1718,7 @@ class DataFactory(object):
                                           join_evals=[],
                                           kwargs=kwargs)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_newsletter_log: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for get_newsletter_log: %s." % e)
             return {'recordsFiltered': 0,
                     'recordsTotal': 0,
                     'draw': 0,
@@ -1757,12 +1757,12 @@ class DataFactory(object):
         monitor_db = database.MonitorDatabase()
 
         try:
-            logger.info(u"Tautulli DataFactory :: Clearing newsletter logs from database.")
+            logger.info("Tautulli DataFactory :: Clearing newsletter logs from database.")
             monitor_db.action('DELETE FROM newsletter_log')
             monitor_db.action('VACUUM')
             return True
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for delete_newsletter_log: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for delete_newsletter_log: %s." % e)
             return False
 
     def get_user_devices(self, user_id=''):
@@ -1773,7 +1773,7 @@ class DataFactory(object):
                 query = 'SELECT machine_id FROM session_history WHERE user_id = ? GROUP BY machine_id'
                 result = monitor_db.select(query=query, args=[user_id])
             except Exception as e:
-                logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_user_devices: %s." % e)
+                logger.warn("Tautulli DataFactory :: Unable to execute database query for get_user_devices: %s." % e)
                 return []
         else:
             return []
@@ -1788,7 +1788,7 @@ class DataFactory(object):
                 query = 'SELECT * FROM recently_added WHERE rating_key = ?'
                 result = monitor_db.select(query=query, args=[rating_key])
             except Exception as e:
-                logger.warn(u"Tautulli DataFactory :: Unable to execute database query for get_recently_added_item: %s." % e)
+                logger.warn("Tautulli DataFactory :: Unable to execute database query for get_recently_added_item: %s." % e)
                 return []
         else:
             return []
@@ -1814,7 +1814,7 @@ class DataFactory(object):
         try:
             monitor_db.upsert(table_name='recently_added', key_dict=keys, value_dict=values)
         except Exception as e:
-            logger.warn(u"Tautulli DataFactory :: Unable to execute database query for set_recently_added_item: %s." % e)
+            logger.warn("Tautulli DataFactory :: Unable to execute database query for set_recently_added_item: %s." % e)
             return False
 
         return True

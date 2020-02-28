@@ -20,9 +20,9 @@ import subprocess
 import tarfile
 
 import plexpy
-import common
-import logger
-import request
+from . import common
+from . import logger
+from . import request
 
 
 def runGit(args):
@@ -44,7 +44,7 @@ def runGit(args):
             logger.debug('Trying to execute: "' + cmd + '" with shell in ' + plexpy.PROG_DIR)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=plexpy.PROG_DIR)
             output, err = p.communicate()
-            output = output.strip()
+            output = output.decode('utf8').strip()
 
             logger.debug('Git output: ' + output)
         except OSError:

@@ -44,11 +44,11 @@ class Client(object):
 
     It accepts the following required arguments:
 
-    :param user_id: Your MaxMind User ID.
+    :param account_id: Your MaxMind account ID.
     :param license_key: Your MaxMind license key.
 
     Go to https://www.maxmind.com/en/my_license_key to see your MaxMind
-    User ID and license key.
+    account ID and license key.
 
     The following keyword arguments are also accepted:
 
@@ -81,19 +81,34 @@ class Client(object):
       * zh-CN -- Simplified Chinese.
 
     """
+    def __init__(
+            self,
+            account_id=None,
+            license_key=None,
+            host='geoip.maxmind.com',
+            locales=None,
+            timeout=None,
 
-    def __init__(self,
-                 user_id,
-                 license_key,
-                 host='geoip.maxmind.com',
-                 locales=None,
-                 timeout=None):
+            # This is deprecated and not documented for that reason.
+            # It can be removed if we do a major release in the future.
+            user_id=None):
         """Construct a Client."""
         # pylint: disable=too-many-arguments
         if locales is None:
             locales = ['en']
+        if account_id is None:
+            account_id = user_id
+
+        if account_id is None:
+            raise TypeError('The account_id is a required parameter')
+        if license_key is None:
+            raise TypeError('The license_key is a required parameter')
+
         self._locales = locales
-        self._user_id = user_id
+        # requests 2.12.2 requires that the username passed to auth be bytes
+        # or a string, with the former being preferred.
+        self._account_id = account_id if isinstance(account_id,
+                                                    bytes) else str(account_id)
         self._license_key = license_key
         self._base_uri = 'https://%s/geoip/v2.1' % host
         self._timeout = timeout
@@ -140,15 +155,16 @@ class Client(object):
             ip_address = str(compat_ip_address(ip_address))
         uri = '/'.join([self._base_uri, path, ip_address])
         response = requests.get(uri,
-                                auth=(self._user_id, self._license_key),
-                                headers={'Accept': 'application/json',
-                                         'User-Agent': self._user_agent()},
+                                auth=(self._account_id, self._license_key),
+                                headers={
+                                    'Accept': 'application/json',
+                                    'User-Agent': self._user_agent()
+                                },
                                 timeout=self._timeout)
-        if response.status_code == 200:
-            body = self._handle_success(response, uri)
-            return model_class(body, locales=self._locales)
-        else:
-            self._handle_error(response, uri)
+        if response.status_code != 200:
+            raise self._exception_for_error(response, uri)
+        body = self._handle_success(response, uri)
+        return model_class(body, locales=self._locales)
 
     def _user_agent(self):
         return 'GeoIP2 Python Client v%s (%s)' % (geoip2.__version__,
@@ -158,62 +174,64 @@ class Client(object):
         try:
             return response.json()
         except ValueError as ex:
-            raise GeoIP2Error('Received a 200 response for %(uri)s'
-                              ' but could not decode the response as '
-                              'JSON: ' % locals() + ', '.join(ex.args), 200,
-                              uri)
+            raise GeoIP2Error(
+                'Received a 200 response for %(uri)s'
+                ' but could not decode the response as '
+                'JSON: ' % locals() + ', '.join(ex.args), 200, uri)
 
-    def _handle_error(self, response, uri):
+    def _exception_for_error(self, response, uri):
         status = response.status_code
 
         if 400 <= status < 500:
-            self._handle_4xx_status(response, status, uri)
+            return self._exception_for_4xx_status(response, status, uri)
         elif 500 <= status < 600:
-            self._handle_5xx_status(status, uri)
-        else:
-            self._handle_non_200_status(status, uri)
+            return self._exception_for_5xx_status(status, uri)
+        return self._exception_for_non_200_status(status, uri)
 
-    def _handle_4xx_status(self, response, status, uri):
+    def _exception_for_4xx_status(self, response, status, uri):
         if not response.content:
-            raise HTTPError('Received a %(status)i error for %(uri)s '
-                            'with no body.' % locals(), status, uri)
+            return HTTPError(
+                'Received a %(status)i error for %(uri)s '
+                'with no body.' % locals(), status, uri)
         elif response.headers['Content-Type'].find('json') == -1:
-            raise HTTPError('Received a %i for %s with the following '
-                            'body: %s' % (status, uri, response.content),
-                            status, uri)
+            return HTTPError(
+                'Received a %i for %s with the following '
+                'body: %s' % (status, uri, response.content), status, uri)
         try:
             body = response.json()
         except ValueError as ex:
-            raise HTTPError(
+            return HTTPError(
                 'Received a %(status)i error for %(uri)s but it did'
                 ' not include the expected JSON body: ' % locals() +
                 ', '.join(ex.args), status, uri)
         else:
             if 'code' in body and 'error' in body:
-                self._handle_web_service_error(
+                return self._exception_for_web_service_error(
                     body.get('error'), body.get('code'), status, uri)
-            else:
-                raise HTTPError(
-                    'Response contains JSON but it does not specify '
-                    'code or error keys', status, uri)
+            return HTTPError(
+                'Response contains JSON but it does not specify '
+                'code or error keys', status, uri)
 
-    def _handle_web_service_error(self, message, code, status, uri):
+    def _exception_for_web_service_error(self, message, code, status, uri):
         if code in ('IP_ADDRESS_NOT_FOUND', 'IP_ADDRESS_RESERVED'):
-            raise AddressNotFoundError(message)
-        elif code in ('AUTHORIZATION_INVALID', 'LICENSE_KEY_REQUIRED',
+            return AddressNotFoundError(message)
+        elif code in ('ACCOUNT_ID_REQUIRED', 'ACCOUNT_ID_UNKNOWN',
+                      'AUTHORIZATION_INVALID', 'LICENSE_KEY_REQUIRED',
                       'USER_ID_REQUIRED', 'USER_ID_UNKNOWN'):
-            raise AuthenticationError(message)
+            return AuthenticationError(message)
         elif code in ('INSUFFICIENT_FUNDS', 'OUT_OF_QUERIES'):
-            raise OutOfQueriesError(message)
+            return OutOfQueriesError(message)
         elif code == 'PERMISSION_REQUIRED':
-            raise PermissionRequiredError(message)
+            return PermissionRequiredError(message)
 
-        raise InvalidRequestError(message, code, status, uri)
+        return InvalidRequestError(message, code, status, uri)
 
-    def _handle_5xx_status(self, status, uri):
-        raise HTTPError('Received a server error (%(status)i) for '
-                        '%(uri)s' % locals(), status, uri)
+    def _exception_for_5xx_status(self, status, uri):
+        return HTTPError(
+            'Received a server error (%(status)i) for '
+            '%(uri)s' % locals(), status, uri)
 
-    def _handle_non_200_status(self, status, uri):
-        raise HTTPError('Received a very surprising HTTP status '
-                        '(%(status)i) for %(uri)s' % locals(), status, uri)
+    def _exception_for_non_200_status(self, status, uri):
+        return HTTPError(
+            'Received a very surprising HTTP status '
+            '(%(status)i) for %(uri)s' % locals(), status, uri)

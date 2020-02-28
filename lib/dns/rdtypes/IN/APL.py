@@ -1,4 +1,6 @@
-# Copyright (C) 2003-2007, 2009-2011 Nominum, Inc.
+# Copyright (C) Dnspython Contributors, see LICENSE for text of ISC license
+
+# Copyright (C) 2003-2017 Nominum, Inc.
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose with or without fee is hereby granted,
@@ -13,14 +15,15 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 # OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import struct
 import binascii
+import codecs
+import struct
 
 import dns.exception
 import dns.inet
 import dns.rdata
 import dns.tokenizer
-from dns._compat import xrange
+from dns._compat import xrange, maybe_chr
 
 
 class APLItem(object):
@@ -63,7 +66,7 @@ class APLItem(object):
         #
         last = 0
         for i in xrange(len(address) - 1, -1, -1):
-            if address[i] != chr(0):
+            if address[i] != maybe_chr(0):
                 last = i + 1
                 break
         address = address[0: last]
@@ -91,7 +94,7 @@ class APL(dns.rdata.Rdata):
         self.items = items
 
     def to_text(self, origin=None, relativize=True, **kw):
-        return ' '.join(map(lambda x: str(x), self.items))
+        return ' '.join(map(str, self.items))
 
     @classmethod
     def from_text(cls, rdclass, rdtype, tok, origin=None, relativize=True):
@@ -121,6 +124,7 @@ class APL(dns.rdata.Rdata):
 
     @classmethod
     def from_wire(cls, rdclass, rdtype, wire, current, rdlen, origin=None):
+
         items = []
         while 1:
             if rdlen == 0:
@@ -142,21 +146,20 @@ class APL(dns.rdata.Rdata):
             l = len(address)
             if header[0] == 1:
                 if l < 4:
-                    address += '\x00' * (4 - l)
+                    address += b'\x00' * (4 - l)
                 address = dns.inet.inet_ntop(dns.inet.AF_INET, address)
             elif header[0] == 2:
                 if l < 16:
-                    address += '\x00' * (16 - l)
+                    address += b'\x00' * (16 - l)
                 address = dns.inet.inet_ntop(dns.inet.AF_INET6, address)
             else:
                 #
                 # This isn't really right according to the RFC, but it
                 # seems better than throwing an exception
                 #
-                address = address.encode('hex_codec')
+                address = codecs.encode(address, 'hex_codec')
             current += afdlen
             rdlen -= afdlen
             item = APLItem(header[0], negation, address, header[1])
             items.append(item)
         return cls(rdclass, rdtype, items)
-

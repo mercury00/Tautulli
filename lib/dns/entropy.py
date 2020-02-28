@@ -1,4 +1,6 @@
-# Copyright (C) 2009, 2011 Nominum, Inc.
+# Copyright (C) Dnspython Contributors, see LICENSE for text of ISC license
+
+# Copyright (C) 2009-2017 Nominum, Inc.
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose with or without fee is hereby granted,
@@ -14,6 +16,7 @@
 # OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 import os
+import random
 import time
 from ._compat import long, binary_type
 try:
@@ -24,6 +27,11 @@ except ImportError:
 
 class EntropyPool(object):
 
+    # This is an entropy pool for Python implementations that do not
+    # have a working SystemRandom.  I'm not sure there are any, but
+    # leaving this code doesn't hurt anything as the library code
+    # is used if present.
+
     def __init__(self, seed=None):
         self.pool_index = 0
         self.digest = None
@@ -33,21 +41,23 @@ class EntropyPool(object):
             import hashlib
             self.hash = hashlib.sha1()
             self.hash_len = 20
-        except:
+        except ImportError:
             try:
                 import sha
                 self.hash = sha.new()
                 self.hash_len = 20
-            except:
-                import md5
+            except ImportError:
+                import md5  # pylint: disable=import-error
                 self.hash = md5.new()
                 self.hash_len = 16
         self.pool = bytearray(b'\0' * self.hash_len)
         if seed is not None:
             self.stir(bytearray(seed))
             self.seeded = True
+            self.seed_pid = os.getpid()
         else:
             self.seeded = False
+            self.seed_pid = 0
 
     def stir(self, entropy, already_locked=False):
         if not already_locked:
@@ -64,19 +74,21 @@ class EntropyPool(object):
                 self.lock.release()
 
     def _maybe_seed(self):
-        if not self.seeded:
+        if not self.seeded or self.seed_pid != os.getpid():
             try:
                 seed = os.urandom(16)
-            except:
+            except Exception:
                 try:
                     r = open('/dev/urandom', 'rb', 0)
                     try:
                         seed = r.read(16)
                     finally:
                         r.close()
-                except:
+                except Exception:
                     seed = str(time.time())
             self.seeded = True
+            self.seed_pid = os.getpid()
+            self.digest = None
             seed = bytearray(seed)
             self.stir(seed, True)
 
@@ -114,14 +126,23 @@ class EntropyPool(object):
         else:
             rand = self.random_8
             max = 255
-        return (first + size * rand() // (max + 1))
+        return first + size * rand() // (max + 1)
 
 pool = EntropyPool()
 
+try:
+    system_random = random.SystemRandom()
+except Exception:
+    system_random = None
 
 def random_16():
-    return pool.random_16()
-
+    if system_random is not None:
+        return system_random.randrange(0, 65536)
+    else:
+        return pool.random_16()
 
 def between(first, last):
-    return pool.random_between(first, last)
+    if system_random is not None:
+        return system_random.randrange(first, last + 1)
+    else:
+        return pool.random_between(first, last)
