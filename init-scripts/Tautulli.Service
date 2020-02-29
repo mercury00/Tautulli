@@ -48,7 +48,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/local/tautulli-venv/bin/python3 /usr/local/tautulli-venv/Tautulli/Tautulli.py --config /usr/local/tautulli-venv/config.ini --datadir /usr/local/tautulli-venv/localdata/ --quiet --daemon --nolaunch
+ExecStart=/usr/local/tautulli-venv/bin/python3 /usr/local/tautulli-venv/Tautulli/Tautulli.py --config /usr/local/tautulli-venv/config.ini --datadir /usr/local/tautulli-venv/localdata --verbose --daemon --nolaunch
 GuessMainPID=no
 Type=forking
 User=tautulli

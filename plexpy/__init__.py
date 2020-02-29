@@ -1,4 +1,4 @@
-﻿# This file is part of Tautulli.
+# This file is part of Tautulli.
 #
 #  Tautulli is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -344,7 +344,7 @@ def daemonize():
     except OSError as e:
         raise RuntimeError("2nd fork failed: %s [%d]", e.strerror, e.errno)
 
-    dev_null = file('/dev/null', 'r')
+    dev_null = open('/dev/null', 'r')
     os.dup2(dev_null.fileno(), sys.stdin.fileno())
 
     si = open('/dev/null', "r")
@@ -360,7 +360,7 @@ def daemonize():
 
     if CREATEPID:
         logger.info("Writing PID %d to %s", pid, PIDFILE)
-        with file(PIDFILE, 'w') as fp:
+        with open(PIDFILE, 'w') as fp:
             fp.write("%s\n" % pid)
 
 
