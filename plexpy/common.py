@@ -14,7 +14,6 @@
 #  along with Tautulli.  If not, see <http://www.gnu.org/licenses/>.
 
 import platform
-from distro import linux_distribution
 from collections import OrderedDict
 
 from . import version
@@ -24,7 +23,7 @@ PRODUCT = 'Tautulli'
 PLATFORM = platform.system()
 PLATFORM_RELEASE = platform.release()
 PLATFORM_VERSION = platform.version()
-PLATFORM_LINUX_DISTRO = ' '.join(x for x in linux_distribution() if x)
+PLATFORM_LINUX_DISTRO = ' '.join(x for x in platform.linux_distribution() if x)
 PLATFORM_DEVICE_NAME = platform.node()
 BRANCH = version.PLEXPY_BRANCH
 RELEASE = version.PLEXPY_RELEASE_VERSION
@@ -35,10 +34,25 @@ DEFAULT_USER_THUMB = "interfaces/default/images/gravatar-default-80x80.png"
 DEFAULT_POSTER_THUMB = "interfaces/default/images/poster.png"
 DEFAULT_COVER_THUMB = "interfaces/default/images/cover.png"
 DEFAULT_ART = "interfaces/default/images/art.png"
+DEFAULT_LIVE_TV_POSTER_THUMB = "interfaces/default/images/poster-live.png"
+DEFAULT_LIVE_TV_ART = "interfaces/default/images/art-live.png"
+DEFAULT_LIVE_TV_ART_FULL = "interfaces/default/images/art-live-full.png"
 
 ONLINE_POSTER_THUMB = "https://tautulli.com/images/poster.png"
 ONLINE_COVER_THUMB = "https://tautulli.com/images/cover.png"
 ONLINE_ART = "https://tautulli.com/images/art.png"
+
+LIVE_TV_SECTION_ID = 999999  # Fake section_id for Live TV library
+LIVE_TV_SECTION_NAME = "Live TV"  # Fake section_name for Live TV library
+
+DEFAULT_IMAGES = {
+    'poster': DEFAULT_POSTER_THUMB,
+    'cover': DEFAULT_COVER_THUMB,
+    'art': DEFAULT_ART,
+    'poster-live': DEFAULT_LIVE_TV_POSTER_THUMB,
+    'art-live': DEFAULT_LIVE_TV_ART,
+    'art-live-full': DEFAULT_LIVE_TV_ART_FULL
+}
 
 MEDIA_TYPE_HEADERS = {
     'movie': 'Movies',
@@ -352,6 +366,9 @@ NOTIFICATION_PARAMETERS = [
              {'name': 'Optimized Version Profile', 'type': 'str', 'value': 'optimized_version_profile', 'description': 'The optimized version profile of the stream.'},
              {'name': 'Synced Version', 'type': 'int', 'value': 'synced_version', 'description': 'If the stream is an synced version.', 'example': '0 or 1'},
              {'name': 'Live', 'type': 'int', 'value': 'live', 'description': 'If the stream is live TV.', 'example': '0 or 1'},
+             {'name': 'Channel Call Sign', 'type': 'str', 'value': 'channel_call_sign', 'description': 'The Live TV channel call sign.'},
+             {'name': 'Channel Identifier', 'type': 'str', 'value': 'channel_identifier', 'description': 'The Live TV channel number.'},
+             {'name': 'Channel Thumb', 'type': 'str', 'value': 'channel_thumb', 'description': 'The URL for the Live TV channel logo.'},
              {'name': 'Secure', 'type': 'int', 'value': 'secure', 'description': 'If the stream is using a secure connection.', 'example': '0 or 1'},
              {'name': 'Relayed', 'type': 'int', 'value': 'relayed', 'description': 'If the stream is using Plex Relay.', 'example': '0 or 1'},
              {'name': 'Stream Local', 'type': 'int', 'value': 'stream_local', 'description': 'If the stream is local.', 'example': '0 or 1'},
