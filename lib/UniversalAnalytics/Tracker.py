@@ -89,9 +89,9 @@ class HTTPRequest(object):
     # Apply stored properties to the given dataset & POST to the configured endpoint
     def send(self, data):
         request = Request(
-                self.endpoint + '?' + urlencode(self.fixUTF8(data)),
+                self.endpoint.decode() + '?' + urlencode(data),
                 headers = {
-                    'User-Agent': self.user_agent
+                    'User-Agent': self.user_agent.decode()
                 }
             )
         self.open(request)

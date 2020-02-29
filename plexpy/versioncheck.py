@@ -44,7 +44,7 @@ def runGit(args):
             logger.debug('Trying to execute: "' + cmd + '" with shell in ' + plexpy.PROG_DIR)
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=plexpy.PROG_DIR)
             output, err = p.communicate()
-            output = output.strip()
+            output = output.decode().strip()
 
             logger.debug('Git output: ' + output)
         except OSError:
